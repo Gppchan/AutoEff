@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 
-from Tool.Frequency import FrequencyManager
+from Frequency import FrequencyManager
 import CST
 
 # ========================== 样式表定义 ==========================

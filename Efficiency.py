@@ -3,11 +3,12 @@ from datetime import datetime
 
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from openpyxl.styles import Alignment, Border, Side
+from openpyxl.styles import Alignment, Border, Side, Font
 from openpyxl.utils import get_column_letter
 import numpy as np
 
-import Tool, CST
+from Frequency import Frequency, FrequencyBand, FrequencyManager
+import CST
 
 def cal_antenna_eff_map(cst: CST.Contents, antenna_table: list[tuple[str, str, str]]) -> dict[
     str, dict[str, tuple[float]]]:
@@ -34,13 +35,13 @@ def cal_antenna_eff_map(cst: CST.Contents, antenna_table: list[tuple[str, str, s
         for __freq_text in freq_texts:
             if not  __freq_text:
                 continue
-            freq = Tool.FrequencyManager.parse_freq_text(__freq_text)[0]
+            freq = FrequencyManager.parse_freq_text(__freq_text)[0]
             freq_inf: float = 0
             freq_sup: float = 0
-            if type(freq) == Tool.Frequency:
+            if type(freq) == Frequency:
                 freq_inf = freq.inf / 1000.0
                 freq_sup = freq.sup / 1000.0
-            elif type(freq) == Tool.FrequencyBand:
+            elif type(freq) == FrequencyBand:
                 if freq.is_duplex():
                     freq_inf = freq.downlink.inf / 1000.0
                     freq_sup = freq.downlink.sup / 1000.0
@@ -60,31 +61,42 @@ def cal_antenna_eff_map(cst: CST.Contents, antenna_table: list[tuple[str, str, s
                 inf_index = inf_index - 1
 
             sub_eff = np.real(eff_chart.y[inf_index: sup_index + 1])
-            first_eff = float(sub_eff[0]) * 1000
-            avg_eff = float(sub_eff.mean()) * 1000
-            max_eff = float(sub_eff.max()) * 1000
-            last_eff = float(sub_eff[-1]) * 1000
-            freq_eff_map |= {freq.name: (first_eff, avg_eff, max_eff, last_eff)}
+            first_eff = float(sub_eff[0])
+            max_eff = float(sub_eff.max())
+            last_eff = float(sub_eff[-1])
+            avg_eff = float(sub_eff.mean())
+            freq_eff_map |= {freq.name: (first_eff, max_eff, last_eff, avg_eff)}
 
         antenna_eff_map |= {_antenna_name: freq_eff_map}
     return antenna_eff_map
 
 def export_antenna_eff_map(antenna_eff_map: dict[str, dict[str, tuple[float]]], excel_dir : Path):
     wb = Workbook()
-    ws = wb.active
+    ws : Worksheet = wb.active
     ws.title = "效率"
-
+    font = Font(bold=True, italic=False, name="微软雅黑", size=14)
+    alignment = Alignment(horizontal='center', vertical='center')
     for i, _antenna in enumerate(antenna_eff_map):
         row = i * 3 + 1
         eff_map = antenna_eff_map[_antenna]
         ws.merge_cells(start_row=row, start_column=1, end_row=row + 2, end_column=1)
         ws.cell(row=row, column=1).value = _antenna
+        ws.cell(row=row, column=1).alignment = alignment
+        ws.cell(row=row, column=1).font = font
+        for __row_index in range(row, row + 3):
+            ws.row_dimensions[__row_index].height = 20
         for j, __freq  in enumerate(eff_map):
             col = j + 2
             effs = eff_map[__freq]
             ws.cell(row=row, column=col).value = __freq
+            ws.cell(row=row, column=col).alignment = alignment
+            ws.cell(row=row, column=col).font = font
             ws.cell(row=row+1, column=col).value = f"{effs[0]:.2f}_{effs[1]:.2f}_{effs[2]:.2f}"
+            ws.cell(row=row+1, column=col).alignment = alignment
             ws.cell(row=row+2, column=col).value = f"{effs[3]:.2f}"
+            ws.cell(row=row+2, column=col).alignment = alignment
+            col_letter = get_column_letter(col)
+            ws.column_dimensions[col_letter].width = 25
 
     # 保存文件
     wb.save(excel_dir / f"eff_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx")

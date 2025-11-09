@@ -9,7 +9,7 @@ import tkinter.messagebox
 import CST
 from Efficiency import cal_antenna_eff_map, export_antenna_eff_map
 from LIC.Status import Status
-from UI import AntennaAllocationWidget, PathSelectionWidget, DARK_STYLE_SHEET
+from ui import AntennaAllocationWidget, PathSelectionWidget, DARK_STYLE_SHEET
 from LIC.TrialManager import TrialManager
 
 
@@ -110,15 +110,17 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    if TrialManager.check_user_trial() != Status.VALID:
-        os.system("pause")
+    if TrialManager.check_user_trial() == Status.EXPIRED:
         tk.messagebox.showerror("Error", "试用过期")
+        return
+    elif TrialManager.check_user_trial() == Status.ILLEGAL:
+        tk.messagebox.showerror("Error", "试用凭证损坏")
         return
 
     if len(sys.argv) > 1:
         _, cst_path = sys.argv
     else:
-        cst_path = r"C:\Users\gaopeng\Desktop\AutoEff\case\3Ants-0919.cst"
+        return
 
     # 显示主窗口
     app = QApplication(sys.argv)

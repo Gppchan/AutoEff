@@ -39,28 +39,31 @@ class TrialManager(object):
 
     @classmethod
     def check_user_trial(cls) -> Status:
-        trial_file = Path().home() / ".hhh.trial"
-        if trial_file.exists():
-            with open(trial_file, mode="r") as f:
-                ciphertext = f.readline()
-            cryptograph = Cryptograph(cls.__SECRET_KEY)
-            plaintext = cryptograph.decrypt(ciphertext)
-            trial: Trial = Trial.load(plaintext)
-            if trial.status() != Status.VALID:
-                return trial.status()
-            trial.update()
-            trial_file.unlink()
-            with open(trial_file, mode="w") as f:
+        try:
+            trial_file = Path().home() / ".bash.trial"
+            if trial_file.exists():
+                with open(trial_file, mode="r") as f:
+                    ciphertext = f.readline()
+                cryptograph = Cryptograph(cls.__SECRET_KEY)
+                plaintext = cryptograph.decrypt(ciphertext)
+                trial: Trial = Trial.load(plaintext)
+                if trial.status() != Status.VALID:
+                    return trial.status()
+                trial.update()
+                trial_file.unlink()
+                with open(trial_file, mode="w") as f:
+                    cryptograph = Cryptograph(cls.__SECRET_KEY)
+                    ciphertext = cryptograph.encrypt(trial.dump())
+                    f.write(ciphertext)
+                os.system(f"attrib +h {trial_file}")
+                return Status.VALID
+            else:
+                trial = Trial.first(30)
                 cryptograph = Cryptograph(cls.__SECRET_KEY)
                 ciphertext = cryptograph.encrypt(trial.dump())
-                f.write(ciphertext)
-            os.system(f"attrib +h {trial_file}")
-            return Status.VALID
-        else:
-            trial = Trial.first(30)
-            cryptograph = Cryptograph(cls.__SECRET_KEY)
-            ciphertext = cryptograph.encrypt(trial.dump())
-            with open(trial_file, mode="w") as f:
-                f.write(ciphertext)
-            os.system(f"attrib +h {trial_file}")
-            return Status.VALID
+                with open(trial_file, mode="w") as f:
+                    f.write(ciphertext)
+                os.system(f"attrib +h {trial_file}")
+                return Status.VALID
+        except:
+            return Status.ILLEGAL

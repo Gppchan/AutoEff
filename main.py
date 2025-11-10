@@ -7,10 +7,9 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
 import tkinter as tk
 import tkinter.messagebox
 import CST
-from Efficiency import cal_antenna_eff_map, export_antenna_eff_map
-from LIC.Status import Status
+from LIC import Status, TrialManager
+from efficiency import cal_antenna_eff_map, export_antenna_eff_map
 from ui import AntennaAllocationWidget, PathSelectionWidget, DARK_STYLE_SHEET
-from LIC.TrialManager import TrialManager
 
 
 class MainWindow(QMainWindow):

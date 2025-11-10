@@ -7,7 +7,7 @@ from openpyxl.styles import Alignment, Border, Side, Font
 from openpyxl.utils import get_column_letter
 import numpy as np
 
-from Frequency import Frequency, FrequencyBand, FrequencyManager
+from frequency import Frequency, FrequencyBand, FrequencyManager
 import CST
 
 def cal_antenna_eff_map(cst: CST.Contents, antenna_table: list[tuple[str, str, str]]) -> dict[
